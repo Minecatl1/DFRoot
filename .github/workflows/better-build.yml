@@ -1,0 +1,48 @@
+name: Build with Makefile
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build DFRoot APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: sdkmanager --install "platforms;android-37" "cmake;3.22.1"
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes podman
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build app and kernel modules
+        run: make
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: DFRoot
+          path: out/DFRoot.apk
+          if-no-files-found: error
+          retention-days: 14
